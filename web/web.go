@@ -82,6 +82,14 @@ var reactRouterPaths = []string{
 	"/starting",
 }
 
+// secureHeaders adds common HTTP security headers to responses.
+func secureHeaders(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("X-XSS-Protection", "1; mode=block")
+	w.Header().Add("X-Content-Type-Options", "nosniff")
+	w.Header().Add("X-Frame-Options", "SAMEORIGIN")
+	w.Header().Add("Content-Security-Policy", "frame-ancestors 'self'")
+}
+
 // withStackTrace logs the stack trace in case the request panics. The function
 // will re-raise the error which will then be handled by the net/http package.
 // It is needed because the go-kit log package doesn't manage properly the
@@ -97,6 +105,7 @@ func withStackTracer(h http.Handler, l log.Logger) http.Handler {
 				panic(err)
 			}
 		}()
+		secureHeaders(w, r)
 		h.ServeHTTP(w, r)
 	})
 }
